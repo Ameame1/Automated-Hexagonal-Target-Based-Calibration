@@ -1,5 +1,6 @@
-# CITS4402_Proj
-# **Project: Automatic calibration of a holographic acquisition rig**
+# **CV Research Project:**
+
+## **Automatic calibration of a holographic acquisition rig**
 
 ## Table of Contents
 
