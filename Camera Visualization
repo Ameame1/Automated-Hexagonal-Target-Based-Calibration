@@ -1,0 +1,39 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+# Data posisi kamera
+camera_position11_right = np.array([ 0.00251749,  -0.01000228 ,   0.0018288 ])
+camera_position11_left = np.array([0.08928577,  -0.03398345,   0.99310987])
+camera_position71 = np.array([10.98080745, -1.58578311, 53.05001972])
+camera_position72 = np.array([ 35.24564903,  5.35608546, -50.35773706])
+camera_position73 = np.array([ 0.39550752,-0.06225997, 1.06348669])
+camera_position74 = np.array([-0.16912504, -0.23751785,  0.92769537])
+
+
+
+
+# Inisialisasi plot 3D
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+# Plot posisi kamera
+ax.scatter(camera_position11_right[0], camera_position11_right[1], camera_position11_right[2], c='r', marker='o', label='Camera 11 right')
+ax.scatter(camera_position11_left[1], camera_position11_left[1], camera_position11_left[2], c='b', marker='o', label='Camera 11 left')
+ax.scatter(camera_position71[0], camera_position71[1], camera_position71[2], c='g', marker='o', label='Camera 71')
+ax.scatter(camera_position72[0], camera_position72[1], camera_position72[2], c='y', marker='o', label='Camera 72')
+ax.scatter(camera_position73[0], camera_position73[1], camera_position73[2], c='r', marker='o', label='Camera 73')
+ax.scatter(camera_position74[0], camera_position72[1], camera_position74[2], c='black', marker='o', label='Camera 74')
+
+# Label sumbu
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+
+# Tampilkan legenda
+ax.legend()
+
+# Tampilkan plot
+plt.show()
+
+

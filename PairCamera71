@@ -1,10 +1,13 @@
+# the pairs camera (71 & 11_right), (72 & 11_left), (71 & 72), (71 & 74), (73 & 74)
+
+# only do for the camera which is not pair yet (71 and 74), and (73 and 74) 
+
 import os.path
 
 import numpy as np
 import cv2
 import json
-from target_localization import get_target_points
-import numpy as np
+#from target_localization import get_target_points
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -19,9 +22,8 @@ def get_relative_position(holographic_info_dict, left_camera, right_camera):
     right_targets_sets = set(right_camera_info["target_label_set"])
 
     corresponding_targets_set = left_targets_sets.intersection(right_targets_sets)
+    print("Corresponding targets set: ", corresponding_targets_set)
     corresponding_targets_list = list(corresponding_targets_set)
-    corresponding_targets_list.sort()
-    print("Corresponding targets list: ", corresponding_targets_list)
 
     # [4.2] get the coordinates of the same target point in left and right images
     image_points_left = []
@@ -39,25 +41,28 @@ def get_relative_position(holographic_info_dict, left_camera, right_camera):
     camera_matrix_right = np.array(right_camera_info.get("camera_matrix"))
     distortion_coeffs_right = np.array(right_camera_info.get("distortion_coeffs"))
 
+    F, _ = cv2.findFundamentalMat(image_points_left, image_points_right, cv2.FM_RANSAC)
+
+    # [6] Get the Essential matrix from the Fundamental matrix
+    E = camera_matrix_right.T @ F @ camera_matrix_left
+
+    # [7] Calculate the Rotation matrix and translation vector
+    retval, R, T, _ = cv2.recoverPose(E, image_points_left, image_points_right, camera_matrix_left, distortion_coeffs_left)
+
+    # [8] Calculate the world coordinates of the target points
 
     # Projection matrix for left camera
-    R1 = left_camera_info["R"]
-    T1 = left_camera_info["T"]
-    P1 = np.dot(camera_matrix_left, np.hstack((R1, T1)))
-    # P1 = np.dot(camera_matrix_left, np.hstack((np.eye(3), np.zeros((3, 1)))))
-
+    P1 = np.dot(camera_matrix_left, np.hstack((np.eye(3), np.zeros((3, 1)))))
 
     # Projection matrix for right camera
-    R2 = right_camera_info["R"]
-    T2 = right_camera_info["T"]
-    P2 = np.dot(camera_matrix_right, np.hstack((R2, T2)))
+    P2 = np.dot(camera_matrix_right, np.hstack((R, T)))
 
     # 3D positions of the points
     point_4d_hom = cv2.triangulatePoints(P1, P2, image_points_left.T, image_points_right.T)
     point_3d = point_4d_hom / np.tile(point_4d_hom[-1, :], (4, 1))
     target_point_world = point_3d[:3, :].T
 
-    return corresponding_targets_list, target_point_world
+    return R, T, corresponding_targets_list, target_point_world
 
 
 
@@ -186,55 +191,77 @@ if __name__ == "__main__":
         with open(camera_file, 'w') as file:
             json.dump(holographic_info_dict, file)
 
+    # [4] Selected the left stereo camera as the reference camera
+    left_camera_info = holographic_info_dict["camera_71"]
+    right_camera_info = holographic_info_dict["camera_74"]
 
-    # [4] select camera 11 as the reference camera
-    reference_target_key = "GGRGG"
-    target_local_coordinate = np.array([
-        [0, 90.01599884033203, 0],
-        [77.95613861083984, 45.007999420166016, 0],
-        [77.95613861083984, -45.007999420166016, 0],
-        [0, -90.01599884033203, 0],
-        [-77.95613861083984, -45.007999420166016, 0],
-        [-77.95613861083984, 45.007999420166016, 0]
-    ])
+    # [4.1] Get the corresponding targets points
+    left_targets_sets = set(left_camera_info["target_label_set"])
+    right_targets_sets = set(right_camera_info["target_label_set"])
+
+    corresponding_targets_set = left_targets_sets.intersection(right_targets_sets)
+    # print("Corresponding targets set: ", corresponding_targets_set)
+    corresponding_targets_list = list(corresponding_targets_set)
+    corresponding_targets_list.sort()
+
+    print("Corresponding targets list: ", corresponding_targets_list)
+    # [4.2] get the coordinates of the same target point in left and right images
+    image_points_left = []
+    image_points_right = []
+    for key in corresponding_targets_list:
+        image_points_left.append(np.array(left_camera_info.get(key)))
+        image_points_right.append(np.array(right_camera_info.get(key)))
+
+    image_points_left = np.vstack(image_points_left)
+    image_points_right = np.vstack(image_points_right)
+
+    # [4.3] Get the camera intrinsic parameter matrix and distortion coefficients
+    camera_matrix_left = np.array(left_camera_info.get("camera_matrix"))
+    distortion_coeffs_left = np.array(left_camera_info.get("distortion_coeffs"))
+    camera_matrix_right = np.array(right_camera_info.get("camera_matrix"))
+    distortion_coeffs_right = np.array(right_camera_info.get("distortion_coeffs"))
+
+    F, _ = cv2.findFundamentalMat(image_points_left, image_points_right, cv2.FM_RANSAC)
+
+    # [6] Get the Essential matrix from the Fundamental matrix
+    E = camera_matrix_right.T @ F @ camera_matrix_left
+
+    # [7] Calculate the Rotation matrix and translation vector
+    retval, R, T, _ = cv2.recoverPose(E, image_points_left, image_points_right, camera_matrix_left, distortion_coeffs_left)
+
+    # [8] Calculate the world coordinates of the target points
+
+    # Projection matrix for left camera
+    P1 = np.dot(camera_matrix_left, np.hstack((np.eye(3), np.zeros((3, 1)))))
+
+    # Projection matrix for right camera
+    P2 = np.dot(camera_matrix_right, np.hstack((R, T)))
+
+    # 3D positions of the points
+    point_4d_hom = cv2.triangulatePoints(P1, P2, image_points_left.T, image_points_right.T)
+    point_3d = point_4d_hom / np.tile(point_4d_hom[-1, :], (4, 1))
+    target_point_world = point_3d[:3, :].T
 
 
-    homogeneous_object_points = np.hstack((target_local_coordinate, np.ones((target_local_coordinate.shape[0], 1))))
+    # World coordinates of the right camera
+    right_camera_world = -np.dot(R.T, T)
 
-    refer_camera_info = holographic_info_dict["camera_11_left"]
-    refer_target_label_set = list(refer_camera_info["target_label_set"])
-    refer_target_label_set.sort()
-    refer_camera_matrix = np.array(refer_camera_info["camera_matrix"])
-    refer_distortion_coeffs = np.array(refer_camera_info["distortion_coeffs"])
+    # Print the world coordinates
+    #print("World coordinates of the target points:")
+    #print(target_point_world)
+    print("\nWorld coordinates of the right camera:")
+    print(right_camera_world)
 
 
-    refer_target_imag_points = np.array(refer_camera_info[reference_target_key])
-
-    _, rvec, refer_T = cv2.solvePnP(target_local_coordinate, refer_target_imag_points, refer_camera_matrix,
-                                 refer_distortion_coeffs)
-    refer_R, _ = cv2.Rodrigues(rvec)
-
-    refer_camera_info["R"] = refer_R
-    refer_camera_info["T"] = refer_T
-
+    # [9] Store all the target_point_world in a world_points_dict
     word_points_dict = {}
-    # align all the targets to reference coordinates
-    for target_label in refer_target_label_set:
-        target_imag_points = np.array(refer_camera_info[target_label])
+    for i, key in enumerate(corresponding_targets_list):
+        print("Key: ", key)
+        word_points_dict[key] = target_point_world[(i*6):(i+1)*6, :]
 
-        target_imag_points_homo = np.hstack((target_imag_points, np.ones((target_imag_points.shape[0], 1))))
-        normalized_camera_point = np.linalg.inv(refer_camera_matrix) @ target_imag_points_homo.T
-
-        refer_obj_coord = np.linalg.inv(refer_R) @ (normalized_camera_point - refer_T)
-
-        word_points_dict[target_label] = refer_obj_coord.T
-
-    # align the corresponding points in other cameras
-    camera_key_list = list(holographic_info_dict.keys())
-    for camera_key in camera_key_list:
-
-        # [10] calculate the R & T of all cameras
-        targets_world_label_set = set(word_points_dict.keys())
+    # [10] calculate the R & T of all cameras
+    targets_world_label_set = set(corresponding_targets_list)
+    for camera_key in holographic_info_dict.keys():
         camera_info = holographic_info_dict[camera_key]
 
         # store corresponding  points in world coordinates and image cooridiantes
@@ -243,7 +270,11 @@ if __name__ == "__main__":
 
         curr_target_label_set = set(camera_info["target_label_set"])
         curr_correspond_labels = curr_target_label_set.intersection(targets_world_label_set)
-        print("Current correspond targets: ", curr_correspond_labels)
+    
+        print("Current correspond targets: ", curr_correspond_labels, camera_key )
+        
+        
+        
         if len(curr_correspond_labels) == 0:
             print(camera_key + " does not get corresponding world position")
             continue
@@ -259,75 +290,25 @@ if __name__ == "__main__":
         curr_distortion_coeffs = np.array(camera_info.get("distortion_coeffs"))
 
         # using solvePnP to get the rotation matrix and translation vector
-        _, cur_rvec, cur_tvec = cv2.solvePnP(curr_target_point_world, curr_target_point_image, curr_camera_matrix, curr_distortion_coeffs)
-        R_camera, _ = cv2.Rodrigues(cur_rvec)
+        _, rvec, tvec = cv2.solvePnP(curr_target_point_world, curr_target_point_image, curr_camera_matrix, curr_distortion_coeffs)
+        R_camera, _ = cv2.Rodrigues(rvec)
 
         # store the R and T into the camera info
         camera_info["R"] = R_camera
-        camera_info["T"] = cur_tvec
+        camera_info["T"] = tvec
 
-        P = np.dot(curr_camera_matrix, np.hstack((R_camera, cur_tvec)))
-        homogeneous_wordpoints_ref = np.hstack((curr_target_point_world, np.ones((curr_target_point_world.shape[0], 1))))
+        # from image coordinate to the world 3D position for each camera? 
+        
+        _camera_world = -np.dot(camera_info["R"].T, camera_info["T"])
+        print (_camera_world)
+        
 
-        imgpoints_projected_hom = P @ homogeneous_wordpoints_ref.T
-        imgpoints_projected = imgpoints_projected_hom / np.tile(imgpoints_projected_hom[-1, :], (3, 1))
-        imgpoints_projected = imgpoints_projected[:2, :].T
-        error = cv2.norm(curr_target_point_image, imgpoints_projected.reshape(-1, 2), cv2.NORM_L2) / len(imgpoints_projected)
-        print("Projection error: ", error)
-
-        for target_label in curr_target_label_set:
-            if target_label in curr_correspond_labels:
-                continue
-            target_imag_points = np.array(camera_info[target_label])
-
-            target_imag_points_homo = np.hstack((target_imag_points, np.ones((target_imag_points.shape[0], 1))))
-            normalized_camera_point = np.linalg.inv(curr_camera_matrix) @ target_imag_points_homo.T
-
-            obj_coord = np.linalg.inv(R_camera) @ (normalized_camera_point - tvec)
-
-            if target_label in curr_correspond_labels:
-                print("label: ", target_label)
-                print("Test whether is common the same:")
-                print(word_points_dict[target_label] - obj_coord.T)
-            else:
-                word_points_dict[target_label] = obj_coord.T
-
-            # print("label: ", target_label)
-            # print("coordinate: ", obj_coord.T)
-            # print("reference coordinate: ", word_points_dict[target_label])
 
     print("test")
 
 
 
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
-    #
-    # # Plot the target points
-    # ax.scatter(target_point_world[:, 0], target_point_world[:, 1], target_point_world[:, 2], c='blue', label='Target Points')
-    # # ax.text(target_point_world[0], target_point_world[1], target_point_world[2], 'Target Points',
-    # #         color='blue', ha='center', va='center')
-    #
-    # # Plot the right camera position
-    # ax.scatter(right_camera_world[0], right_camera_world[1], right_camera_world[2], c='red', label='Right Camera')
-    # # ax.text(right_camera_world[0], right_camera_world[1], right_camera_world[2], 'Right Camera',
-    # #         color='red', ha='center', va='center')
-    #
-    # ax.scatter(0.0, 0.0, 0.0, c='yellow', label='Left Camera')
-    # # ax.text(0, 0, 0, 'Left Camera',
-    # #         color='red', ha='center', va='center')
-    #
-    # ax.set_xlabel('X')
-    # ax.set_ylabel('Y')
-    # ax.set_zlabel('Z')
-    #
-    # # Add a legend
-    # ax.legend()
-    #
-    # # Show the plot
-    # plt.show()
-    #
-    # # print("Hello")
+    
 
 
 

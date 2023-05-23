@@ -1,0 +1,8 @@
+# based on the code from file 3D_reconstruction_202305201700.py we we got the information below: 
+#Relative 3D world position for each cameras: 
+#camera 11_ right : [ 0.00251749],  [-0.01000228] ,  [ 0.0018288 ]
+#camera 11_ left :  [ 0.08928577],  [-0.03398345],  [ 0.99310987]]
+#camera 71 : [10.98080745], [-1.58578311], [53.05001972]
+#camera 72 : [ 35.24564903], [  5.35608546], [-50.35773706]
+#camera 74 relative to camera 71 :[-0.16912504], [-0.23751785], [ 0.92769537] , however camera 71 becomes : [-0.00863628],  [-0.03540799],  [ 0.08749528]
+#camera 73 relative to camera 74: [ 0.39550752],  [-0.06225997] , [ 1.06348669] 

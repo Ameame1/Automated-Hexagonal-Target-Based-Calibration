@@ -1,0 +1,55 @@
+
+
+
+def projection_error(params, camera_idx, target_idx):
+    # Mendapatkan parameter kamera dan koordinat target terkait
+    camera_param = params[camera_idx]
+    target_points = world_points[target_idx]
+
+    # Proyeksi koordinat 3D ke bidang gambar menggunakan parameter kamera
+    projected_points = project_3d_to_2d(target_points, camera_param)
+
+    # Menghitung kesalahan proyeksi
+    error = np.linalg.norm(projected_points - image_points[camera_idx][target_idx])
+
+    return error
+
+
+
+
+
+
+def project_3d_to_2d(points_3d, camera_params):
+    # Mendapatkan parameter kamera
+    focal_length = camera_params["focal_length"]
+    principal_point = camera_params["principal_point"]
+    distortion_coeffs = camera_params["distortion_coeffs"]
+    rotation_matrix = camera_params["rotation_matrix"]
+    translation_vector = camera_params["translation_vector"]
+
+    # Transformasi koordinat 3D ke koordinat kamera menggunakan rotasi dan translasi
+    points_3d_homogeneous = np.hstack((points_3d, np.ones((points_3d.shape[0], 1))))
+    points_3d_camera = np.dot(rotation_matrix, points_3d_homogeneous.T).T + translation_vector
+
+    # Proyeksi koordinat kamera ke bidang gambar menggunakan parameter proyeksi
+    points_2d_homogeneous = points_3d_camera[:, :2] / points_3d_camera[:, 2:]
+    points_2d_distorted = np.array([
+        distort_point(point_2d, distortion_coeffs)
+        for point_2d in points_2d_homogeneous
+    ])
+    points_2d = points_2d_distorted * focal_length + principal_point
+
+    return points_2d
+
+def distort_point(point, distortion_coeffs):
+    r_squared = point[0]**2 + point[1]**2
+    radial_distortion = 1.0 + distortion_coeffs[0] * r_squared + distortion_coeffs[1] * r_squared**2
+    tangential_distortion_x = 2.0 * distortion_coeffs[2] * point[0] * point[1] + distortion_coeffs[3] * (r_squared + 2.0 * point[0]**2)
+    tangential_distortion_y = distortion_coeffs[2] * (r_squared + 2.0 * point[1]**2) + 2.0 * distortion_coeffs[3] * point[0] * point[1]
+
+    distorted_point = np.array([
+        point[0] * radial_distortion + tangential_distortion_x,
+        point[1] * radial_distortion + tangential_distortion_y
+    ])
+
+    return distorted_point
