@@ -168,12 +168,13 @@ python3 Image_parameter_exploration.py
 
 **3.** Experiment with various image files and parameter combinations to refine target detection results.
 
+### Note:
 For more details see the `Image_parameter_exploration.py` file, which gives clear code splitting and code comments.
 
 ## Authors
-- [22672987@student.uwa.edu.au](mailto:22728187@student.uwa.edu.au)(**Yuliang Zhang**)
+- [yuliang.zhang@research.uwa.edu.au](mailto:yuliang.zhang@research.uwa.edu.au)(**Yuliang Zhang**)
 
 - [22910358@student.uwa.edu.au](mailto:22910358@student.uwa.edu.au)(**Yu Liu**)
 
-- [22200099@student.uwa.edu.au](mailto:22200099@student.uwa.edu.au)(**Juwita**).
+- [juwita.juwita@research.uwa.edu.au](juwita.juwita@research.uwa.edu.au)(**Juwita**).
 
