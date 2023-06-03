@@ -117,12 +117,7 @@ def get_largest_residual_error(matrix_A):
     residual_errors = np.abs(residual_errors)
 
     return residual_errors.max()
-    """
-    This function will figure out these components that can form the six dots targets
-    :param mask: the mask that include hexagon targets
-    :param ellips_threshold: threshold to filter out those components that cannot form obvious hexagon
-    :return: a new mask
-    """
+
 def target_detection(mask, ellips_threshold=0.1):
     """
     This function will figure out these components that can form the six dots targets
@@ -330,7 +325,6 @@ def get_target_points(img_path,
 
 if __name__ == "__main__":
     # get target position of all images
-
     image_path_dict = {
         "camera_11_left": "camera 11/2022_12_15_15_51_19_927_rgb_left.png",
         "camera_11_right": "camera 11/2022_12_15_15_51_19_927_rgb_right.png",
@@ -340,92 +334,18 @@ if __name__ == "__main__":
         "camera_74": "camera 74/2022_12_15_15_51_19_951_rgb.png",
     }
 
-    image_path_dict = {
-        "camera_11_left": "camera 11/2022_12_15_15_51_19_927_rgb_left.png",
-        "camera_11_right": "camera 11/2022_12_15_15_51_19_927_rgb_right.png",
-        "camera_71": "camera 71/2022_12_15_15_51_19_944_rgb.png",
-        "camera_72": "camera 72/2022_12_15_15_51_19_956_rgb.png",
-        "camera_73": "camera 73/2022_12_15_15_51_19_934_rgb.png",
-        "camera_74": "camera 74/2022_12_15_15_51_19_951_rgb.png",
-    }
-
-    hyperparameter_dict ={
-        "camera_11_left": {
-            "camera_params": "camera parameters/zedLeft720p.json",
-            "img_path": "camera 11/2022_12_15_15_51_19_927_rgb_left.png",
-            "min_thresh": 100,
-            "diff_thresh": 100,
-            "min_area": 20,
-            "max_area": 450,
-            "axis_ratio_threshold": 0.25,
-            "ellips_threshold": 0.1
-            },
-        "camera_11_right": {
-            "camera_params": "camera parameters/zedRight720p.json",
-            "img_path": "camera 11/2022_12_15_15_51_19_927_rgb_right.png",
-            "min_thresh": 100,
-            "diff_thresh": 100,
-            "min_area": 20,
-            "max_area": 450,
-            "axis_ratio_threshold": 0.25,
-            "ellips_threshold": 0.1
-            },
-        "camera_71": {
-            "camera_params": "camera parameters/realsense71RGB.json",
-            "img_path": "camera 71/2022_12_15_15_51_19_944_rgb.png",
-            "min_thresh": 100,
-            "diff_thresh": 20,
-            "min_area": 10,
-            "max_area": 450,
-            "axis_ratio_threshold": 0.25,
-            "ellips_threshold": 0.2
-            },
-        "camera_72": {
-            "img_path": "camera 72/2022_12_15_15_51_19_956_rgb.png",
-            "camera_params": "camera parameters/realsense72RGB.json",
-            "min_thresh": 100,
-            "diff_thresh": 15,
-            "min_area": 7,
-            "max_area": 450,
-            "axis_ratio_threshold": 0.25,
-            "ellips_threshold": 0.2
-        },
-        "camera_73": {
-            "camera_params": "camera parameters/realsense73RGB.json",
-            "img_path": "camera 73/2022_12_15_15_51_19_934_rgb.png",
-            "min_thresh": 100,
-            "diff_thresh": 50,
-            "min_area": 10,
-            "max_area": 450,
-            "axis_ratio_threshold": 0.25,
-            "ellips_threshold": 0.1
-            },
-        "camera_74": {
-            "camera_params": "camera parameters/realsense74RGB.json",
-            "img_path": "camera 74/2022_12_15_15_51_19_951_rgb.png",
-            "min_thresh": 50,
-            "diff_thresh": 50,
-            "min_area": 10,
-            "max_area": 450,
-            "axis_ratio_threshold": 0.25,
-            "ellips_threshold": 0.1
-            },
-
-    }
-
+    # Load all images into the image_dict
     image_dict = {}
-
-
     for key in image_path_dict.keys():
         img_path = image_path_dict[key]
         img = cv2.imread(img_path)
         image_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         image_dict[key] = image_rgb
 
-
+    # Take one image for testing
     test_img = image_dict.get("camera_11_left")
     test_img_copy = test_img.copy()
-    # get the M
+    # get the rough mask of targets
     mask = rough_target_detection(test_img)
     # filter unwanted components that are too small or too big
     area_filtered_mask = area_threshold_filter(mask)
@@ -437,12 +357,14 @@ if __name__ == "__main__":
     target_info_list = target_label_align(test_img,cluster_labels, centroids, targets_list)
     # test_img_copy, target_info_list = get_target_points(image_path_dict["camera_74"])
     # draw the target position of on the image
+
+    print(target_info_list[0])
     draw_width = 5
+    # Draw the target position and its labels
     for target in target_info_list:
         label = target.get("key")
         label_list = list(label)
         label_list.insert(0, "B")
-        text_label = "Hexa Target " + label
         centroids = target.get("weighted_centroids")
         for i, coordinate in enumerate(centroids):
             x = int(coordinate[0] + 0.5)
@@ -457,6 +379,7 @@ if __name__ == "__main__":
 
     print(target_info_list)
 
+    # plot the results of each step
     figure = plt.figure(figsize=(20, 20))
     ax1 = figure.add_subplot(321)
     ax2 = figure.add_subplot(322)
@@ -467,22 +390,28 @@ if __name__ == "__main__":
 
     ax1.imshow(test_img)
     ax1.set_title("Original Image")
+    ax1.axis("off")
 
     ax2.imshow(mask)
     ax2.set_title("Raw mask")
+    ax2.axis("off")
 
     ax3.imshow(area_filtered_mask)
     ax3.set_title("Mask after filtering the small and large area")
+    ax3.axis("off")
 
     ax4.imshow(axis_ratio_mask)
     ax4.set_title("Mask after filtering out components obviously not round")
+    ax4.axis("off")
 
     ax5.imshow(targets_mask)
     ax5.set_title("Targets Mask")
+    ax5.axis("off")
 
     ax6.imshow(test_img_copy)
     ax6.set_title("Detected Targets")
-
+    ax6.axis("off")
     # plt.imshow(test_img_copy)
 
     plt.show()
+

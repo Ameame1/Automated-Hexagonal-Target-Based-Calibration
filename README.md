@@ -34,7 +34,6 @@ pip install -r requirements.txt
 ### Original Image
 [<img src="Figures/Original_Image.png" width="1000">](Figures/Original_Image.png)
 
-
 ## Task 1 – The rough detection
 Run Main Python File:
 ```bash
@@ -44,6 +43,7 @@ python3 target_localiztoin.py
 
 #### Function:
  [<img src="Figures/mask_function.png" alt="image" width="1000">](Figures/mask_function.png)
+
 #### Algorithm: `rough_target_detection`
 This function takes an image and applies two conditions to each pixel to create a mask. The conditions involve the minimum threshold of RGB channel values and the difference between the maximum and minimum values.
 
@@ -55,8 +55,8 @@ This function takes an image and applies two conditions to each pixel to create 
 ### [2] Area Filtering
 
 #### Function:
+[<img src="Figures/Area_filtering_fuction.png" alt="image" width="300">](Figures/Area_filtering_fuction.png)
 
-[<img src="Figures/Area_Function.png" alt="image" width="300">](Figures/Area_Function.png)
 #### Algorithm: `area_threshold_filter`
 This function filters out connected components (clusters) in the mask that have areas smaller than a minimum threshold or larger than a maximum threshold.
 
@@ -72,15 +72,15 @@ This function filters out connected components (clusters) in the mask that have 
 #### Algorithm: `axis_ratio_filter`
 This function filters out components that are not round enough based on the axis ratio of their shape.
 
+### **Result**
+
+[<img src="Figures/filtering_out_components_no-round.png" alt="image" width="1200">](Figures/filtering_out_components_no-round.png)
+
 
 ### [4] Calculate Largest Residual Error
 
 #### Algorithm: `get_derivative_matrix` && `get_largest_residual_error`: 
 These functions are used to calculate the largest residual error of a matrix.
-
-
-### **Result**
-[<img src="Figures/filtering_out_components_no-round.png" width="1000">](Figures/filtering_out_components_no-round.png)
 
 ### [5] Residual Errors Filtering
 
@@ -89,7 +89,8 @@ This function identifies clusters in the mask that can form a six-dot target sha
 
 
 ### **Result**
-[<img src="Figures/Target_Mask.png" width="1000">](Figures/Target_Mask.png)
+
+![img.png](Figures/Target_Mask.png)
 
 ### Note:
 
@@ -102,16 +103,15 @@ For more details see the `target_localiztoin.py` file, which gives clear code sp
 This function aligns the labels of the detected targets and computes the weighted centroids of each dot in a target.
 
 ### **Result**
-
-[<img src="Figures/Detected_Targets.png" width="1000">](Figures/Detected_Targets.png)
-
+![img.png](Figures/Detected_Targets.png)
+![img.png](Figures/Detected_Targets-label.png)
 ### Note:
 For more details see the `target_localiztoin.py` file, which gives clear code splitting and code comments.
 
 ## Task 3 – Cameras alignments
 Run Main Python File:
 ```bash
-python3 3d_reconstruction
+python3 3d_reconstruction.py
 ```
 
 ### Algorithm: `get_relative_position`
@@ -136,7 +136,9 @@ target_local_coordinate = np.array([
 [4] **step 4:** by using the least square optimization algorithm to minimize the projection error of each targets in the images.
 
 ### **Result**
-![<img src="Figures/3d.png" alt="image" width="1000">](Figures/3d.png)
+[<img src="Figures/3d.png" width="1000">](Figures/3d.png)
+
+
 ### Note:
 For more details see the `3d_reconstruction` file, which gives clear code splitting and code comments.
 
@@ -168,13 +170,12 @@ python3 Image_parameter_exploration.py
 
 **3.** Experiment with various image files and parameter combinations to refine target detection results.
 
-### Note:
 For more details see the `Image_parameter_exploration.py` file, which gives clear code splitting and code comments.
 
 ## Authors
-- [yuliang.zhang@research.uwa.edu.au](mailto:yuliang.zhang@research.uwa.edu.au)(**Yuliang Zhang**)
+- [yuliang.zhang@research.uwa.edu.au](mailto:yuliang.zhang@research.uwa.edu.au)(**Yuliang Zhang 22828187**)
 
-- [22910358@student.uwa.edu.au](mailto:22910358@student.uwa.edu.au)(**Yu Liu**)
+- [22910358@student.uwa.edu.au](mailto:22910358@student.uwa.edu.au)(**Yu Liu 22910358**)
 
-- [juwita.juwita@research.uwa.edu.au](juwita.juwita@research.uwa.edu.au)(**Juwita**).
+- [juwita.juwita@research.uwa.edu.au](mailto:juwita.juwita@research.uwa.edu.au)(**Juwita 23176467**).
 
