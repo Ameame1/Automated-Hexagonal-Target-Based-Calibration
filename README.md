@@ -136,7 +136,7 @@ target_local_coordinate = np.array([
 [4] **step 4:** by using the least square optimization algorithm to minimize the projection error of each targets in the images.
 
 ### **Result**
-[<img src="Figures/3d.png" width="1000">](Figures/3d-1.png)
+[<img src="Figures/3d-1.png" width="1000">](Figures/3d-1.png)
 
 
 ### Note:
